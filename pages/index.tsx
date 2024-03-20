@@ -18,25 +18,34 @@ export default function Home() {
 
   const handleSend = async (message: Message) => {
     setLoading(true);
-  
+
     // Save message to Supabase
-    const { error } = await supabase
-      .from('messages') // Your table name
-      .insert([
-        { role: message.role, content: message.content }
-      ]);
-  
-    if (error) {
-      console.error('Error saving message to Supabase:', error);
+    const { error: sendError } = await supabase
+      .from('messages')
+      .insert([message]);
+
+    if (sendError) {
+      console.error('Error saving message to Supabase:', sendError);
       setLoading(false);
       return;
     }
-  
+
     // Fetch and display messages from Supabase
-    await fetchMessages();
-  
+    const { data: fetchedMessages, error: fetchError } = await supabase
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (fetchError) {
+      console.error('Error fetching messages:', fetchError);
+      setLoading(false);
+      return;
+    }
+
+    setMessages(fetchedMessages);
     setLoading(false);
-  };
+};
+
 
   const fetchMessages = async () => {
     const { data, error } = await supabase
