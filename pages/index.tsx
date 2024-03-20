@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Layout/Navbar";
 import { Message } from "@/types";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
+import {supabase} from "../supabaseClient";
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -16,64 +17,39 @@ export default function Home() {
   };
 
   const handleSend = async (message: Message) => {
-    const updatedMessages = [...messages, message];
-
-    setMessages(updatedMessages);
     setLoading(true);
-
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        messages: updatedMessages
-      })
-    });
-
-    if (!response.ok) {
+  
+    // Save message to Supabase
+    const { error } = await supabase
+      .from('messages') // Your table name
+      .insert([
+        { role: message.role, content: message.content }
+      ]);
+  
+    if (error) {
+      console.error('Error saving message to Supabase:', error);
       setLoading(false);
-      throw new Error(response.statusText);
-    }
-
-    const data = response.body;
-
-    if (!data) {
       return;
     }
-
+  
+    // Fetch and display messages from Supabase
+    await fetchMessages();
+  
     setLoading(false);
+  };
 
-    const reader = data.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
-    let isFirst = true;
-
-    while (!done) {
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      const chunkValue = decoder.decode(value);
-
-      if (isFirst) {
-        isFirst = false;
-        setMessages((messages) => [
-          ...messages,
-          {
-            role: "assistant",
-            content: chunkValue
-          }
-        ]);
-      } else {
-        setMessages((messages) => {
-          const lastMessage = messages[messages.length - 1];
-          const updatedMessage = {
-            ...lastMessage,
-            content: lastMessage.content + chunkValue
-          };
-          return [...messages.slice(0, -1), updatedMessage];
-        });
-      }
+  const fetchMessages = async () => {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: true });
+  
+    if (error) {
+      console.error('Error fetching messages:', error);
+      return;
     }
+  
+    setMessages(data);
   };
 
   const handleReset = () => {
@@ -88,6 +64,10 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    fetchMessages();
+  }, []);
 
   useEffect(() => {
     setMessages([
