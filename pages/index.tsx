@@ -19,21 +19,18 @@ export default function Home() {
   return uuidv4(); // This function generates a unique UUID
 }
 
-useEffect(() => {
-  // Generate a new conversation ID when the component mounts (or chat session starts)
-  setConversationId(uuidv4());
-}, []); // Empty dependency array ensures this effect runs only once on mount
+
 
  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
  };
 
- const saveMessageToDatabase = async (message: Message, conversationId: string) => {
-    const { data, error } = await supabase.from("messages").insert([
+ const saveMessageToDatabase = async (message: Message, convoId: string) => {
+    const { error } = await supabase.from("messages").insert([
       {
         content: message.content,
         role: message.role,
-        conversation_id: conversationId,
+        conversation_id: convoId,
         
       },
     ]);
@@ -43,13 +40,48 @@ useEffect(() => {
     }
  };
 
+ // New function to insert a conversation into the database
+ const insertConversation = async () => {
+  // Check if the conversation already exists in the state
+  if (!conversationId) {
+    // Generate a new conversation ID
+    const newConvoId = generateConversationId();
+    // Insert the new conversation record into the 'conversations' table
+    const { error } = await supabase.from('conversations').insert([{ id: newConvoId }]);
+
+    // If there's an error, log it and stop the process
+    if (error) {
+      console.error("Error inserting new conversation: ", error);
+      return null;
+    }
+
+    // If successful, update the state with the new conversation ID
+    setConversationId(newConvoId);
+    return newConvoId;
+  }
+
+  // Return existing conversation ID if it's already in the state
+  return conversationId;
+};
+
+
  const handleSend = async (message: Message) => {
+  
+  const convoId = await insertConversation(); // Ensure conversation is created/exists before sending messages
+
+  // If there's no conversation ID, don't proceed
+  if (!convoId) {
+    setLoading(false);
+    console.error("No conversation ID available.");
+    return;
+  }
+
     const updatedMessages = [...messages, message];
     setMessages(updatedMessages);
     
     // Check if conversationId is not null before calling saveMessageToDatabase
    if (conversationId) {
-    await saveMessageToDatabase(message, conversationId);
+    await saveMessageToDatabase(message, convoId);
   } else {
     // Handle the case where conversationId is null
     console.error("ConversationId is null");
@@ -95,7 +127,7 @@ useEffect(() => {
     };
     setMessages((messages) => [...messages, assistantMessage]);
     if (conversationId) {
-      await saveMessageToDatabase(assistantMessage, conversationId);
+      await saveMessageToDatabase(assistantMessage, convoId);
     } else {
       // Handle the case where conversationId is null
       console.error("ConversationId is null");
