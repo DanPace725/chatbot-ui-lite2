@@ -179,25 +179,7 @@ const fetchConversations = async () => {
     ]);
  }, [conversationId]);
  // Component to display saved conversations
-const SavedConversations = () => {
-  const [conversations, setConversations] = useState([]);
 
-  useEffect(() => {
-    const getConversations = async () => {
-      const data = await fetchConversations();
-      setConversations(data);
-    };
-    getConversations();
-  }, []);
-
-  return (
-    <div>
-      {conversations.map((conversation, index) => (
-        <div key={index}>{/* Display conversation details */}</div>
-      ))}
-    </div>
-  );
-};
 
  return (
     <>
@@ -227,9 +209,7 @@ const SavedConversations = () => {
 
         {/* Conditional rendering based on showConversations state */}
         <div className="flex-1 overflow-auto">
-          {showConversations ? (
-            <SavedConversations />
-          ) : (
+          
             <div className="max-w-[800px] mx-auto mt-4 sm:mt-12">
               <Chat
                 messages={messages}
@@ -239,7 +219,7 @@ const SavedConversations = () => {
               />
               <div ref={messagesEndRef} />
             </div>
-          )}
+          
         </div>
         <Footer />
       </div>
