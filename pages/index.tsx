@@ -21,7 +21,7 @@ export default function Home() {
       {
         content: message.content,
         role: message.role,
-        timestamp: new Date().toISOString(),
+        
       },
     ]);
 
