@@ -16,10 +16,7 @@ export default function Home() {
  // Add a new state variable for toggling the view
  const [showConversations, setShowConversations] = useState<boolean>(false);
 
-// Add a button in your component to toggle the view
-<button onClick={() => setShowConversations(!showConversations)}>
-  {showConversations ? "Back to Chat" : "View Saved Conversations"}
-</button>
+
 
  function generateConversationId() {
   return uuidv4(); // This function generates a unique UUID
@@ -181,6 +178,26 @@ const fetchConversations = async () => {
       }
     ]);
  }, [conversationId]);
+ // Component to display saved conversations
+const SavedConversations = () => {
+  const [conversations, setConversations] = useState([]);
+
+  useEffect(() => {
+    const getConversations = async () => {
+      const data = await fetchConversations();
+      setConversations(data);
+    };
+    getConversations();
+  }, []);
+
+  return (
+    <div>
+      {conversations.map((conversation, index) => (
+        <div key={index}>{/* Display conversation details */}</div>
+      ))}
+    </div>
+  );
+};
 
  return (
     <>
@@ -200,22 +217,34 @@ const fetchConversations = async () => {
         />
       </Head>
 
-      <div className="flex flex-col h-screen">
+      
         <Navbar />
+        <div className="flex flex-col h-screen">
+        {/* Toggle button */}
+        <button onClick={() => setShowConversations(!showConversations)} className="m-4">
+          {showConversations ? "Back to Chat" : "View Saved Conversations"}
+        </button>
 
-        <div className="flex-1 overflow-auto sm:px-10 pb-4 sm:pb-10">
-          <div className="max-w-[800px] mx-auto mt-4 sm:mt-12">
-            <Chat
-              messages={messages}
-              loading={loading}
-              onSend={handleSend}
-              onReset={handleReset}
-            />
-            <div ref={messagesEndRef} />
-          </div>
+        {/* Conditional rendering based on showConversations state */}
+        <div className="flex-1 overflow-auto">
+          {showConversations ? (
+            <SavedConversations />
+          ) : (
+            <div className="max-w-[800px] mx-auto mt-4 sm:mt-12">
+              <Chat
+                messages={messages}
+                loading={loading}
+                onSend={handleSend}
+                onReset={handleReset}
+              />
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </div>
         <Footer />
       </div>
     </>
- );
+  );
 }
+
+      
