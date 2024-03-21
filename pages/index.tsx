@@ -13,7 +13,13 @@ export default function Home() {
  const [loading, setLoading] = useState<boolean>(false);
  const [conversationId, setConversationId] = useState<string | null>(null);
  const messagesEndRef = useRef<HTMLDivElement>(null);
+ // Add a new state variable for toggling the view
+ const [showConversations, setShowConversations] = useState<boolean>(false);
 
+// Add a button in your component to toggle the view
+<button onClick={() => setShowConversations(!showConversations)}>
+  {showConversations ? "Back to Chat" : "View Saved Conversations"}
+</button>
 
  function generateConversationId() {
   return uuidv4(); // This function generates a unique UUID
@@ -46,6 +52,15 @@ useEffect(() => {
       console.error("Error saving message to database", error);
     }
  };
+
+ // Function to fetch conversations from the database
+const fetchConversations = async () => {
+  const { data, error } = await supabase.from('messages').select('*');
+  if (error) {
+    console.error("Error fetching conversations: ", error);
+  }
+  return data;
+};
 
  // New function to insert a conversation into the database
  const insertConversation = async () => {
