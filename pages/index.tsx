@@ -4,7 +4,7 @@ import { Navbar } from "@/components/Layout/Navbar";
 import { Message } from "@/types";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
-import {supabase} from "../supabaseClient";
+
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -17,48 +17,64 @@ export default function Home() {
   };
 
   const handleSend = async (message: Message) => {
+    const updatedMessages = [...messages, message];
+
+    setMessages(updatedMessages);
     setLoading(true);
 
-    // Save message to Supabase
-    const { error: sendError } = await supabase
-      .from('messages')
-      .insert([message]);
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messages: updatedMessages
+      })
+    });
 
-    if (sendError) {
-      console.error('Error saving message to Supabase:', sendError);
+    if (!response.ok) {
       setLoading(false);
+      throw new Error(response.statusText);
+    }
+
+    const data = response.body;
+
+    if (!data) {
       return;
     }
 
-    // Fetch and display messages from Supabase
-    const { data: fetchedMessages, error: fetchError } = await supabase
-      .from('messages')
-      .select('*')
-      .order('created_at', { ascending: true });
-
-    if (fetchError) {
-      console.error('Error fetching messages:', fetchError);
-      setLoading(false);
-      return;
-    }
-
-    setMessages(fetchedMessages);
     setLoading(false);
-};
 
+    const reader = data.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    let isFirst = true;
 
-  const fetchMessages = async () => {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .order('created_at', { ascending: true });
-  
-    if (error) {
-      console.error('Error fetching messages:', error);
-      return;
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue = decoder.decode(value);
+
+      if (isFirst) {
+        isFirst = false;
+        setMessages((messages) => [
+          ...messages,
+          {
+            role: "assistant",
+            content: chunkValue
+          }
+        ]);
+      } else {
+        setMessages((messages) => {
+          const lastMessage = messages[messages.length - 1];
+          const updatedMessage = {
+            ...lastMessage,
+            content: lastMessage.content + chunkValue
+          };
+          return [...messages.slice(0, -1), updatedMessage];
+        });
+      }
     }
-  
-    setMessages(data);
   };
 
   const handleReset = () => {
@@ -74,10 +90,7 @@ export default function Home() {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    fetchMessages();
-  }, []);
-
+  
   useEffect(() => {
     setMessages([
       {
