@@ -6,21 +6,34 @@ import { Message } from "@/types";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/supabaseClient";
+import { v4 as uuidv4 } from 'uuid';
 
 export default function Home() {
  const [messages, setMessages] = useState<Message[]>([]);
  const [loading, setLoading] = useState<boolean>(false);
+ const [conversationId, setConversationId] = useState<string | null>(null);
  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+
+ function generateConversationId() {
+  return uuidv4(); // This function generates a unique UUID
+}
+
+useEffect(() => {
+  // Generate a new conversation ID when the component mounts (or chat session starts)
+  setConversationId(uuidv4());
+}, []); // Empty dependency array ensures this effect runs only once on mount
 
  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
  };
 
- const saveMessageToDatabase = async (message: Message) => {
+ const saveMessageToDatabase = async (message: Message, conversationId: string) => {
     const { data, error } = await supabase.from("messages").insert([
       {
         content: message.content,
         role: message.role,
+        conversation_id: conversationId,
         
       },
     ]);
@@ -33,7 +46,14 @@ export default function Home() {
  const handleSend = async (message: Message) => {
     const updatedMessages = [...messages, message];
     setMessages(updatedMessages);
-    await saveMessageToDatabase(message);
+    
+    // Check if conversationId is not null before calling saveMessageToDatabase
+   if (conversationId) {
+    await saveMessageToDatabase(message, conversationId);
+  } else {
+    // Handle the case where conversationId is null
+    console.error("ConversationId is null");
+  }
 
     setLoading(true);
     const response = await fetch("/api/chat", {
@@ -74,7 +94,13 @@ export default function Home() {
       content: assistantResponse,
     };
     setMessages((messages) => [...messages, assistantMessage]);
-    await saveMessageToDatabase(assistantMessage);
+    if (conversationId) {
+      await saveMessageToDatabase(assistantMessage, conversationId);
+    } else {
+      // Handle the case where conversationId is null
+      console.error("ConversationId is null");
+    }
+    
  };
 
  const handleReset = () => {
@@ -91,13 +117,16 @@ export default function Home() {
  }, [messages]);
 
  useEffect(() => {
+    if (!conversationId) {
+      setConversationId(generateConversationId());
+    }
     setMessages([
       {
         role: "assistant",
         content: `Hi there! I'm Chatbot UI, an AI assistant. I can help you with things like answering questions, providing information, and helping with tasks. How can I help you?`
       }
     ]);
- }, []);
+ }, [conversationId]);
 
  return (
     <>
