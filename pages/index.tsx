@@ -19,6 +19,13 @@ export default function Home() {
   return uuidv4(); // This function generates a unique UUID
 }
 
+useEffect(() => {
+  const initiateConversation = async () => {
+    await insertConversation();
+  };
+
+  initiateConversation();
+}, []); // The empty array as the second argument ensures this effect runs only once on mount.
 
 
  const scrollToBottom = () => {
@@ -149,14 +156,16 @@ export default function Home() {
  }, [messages]);
 
  useEffect(() => {
-    
+    if (!conversationId) {
+      setConversationId(generateConversationId());
+    }
     setMessages([
       {
         role: "assistant",
         content: `Hi there! I'm Chatbot UI, an AI assistant. I can help you with things like answering questions, providing information, and helping with tasks. How can I help you?`
       }
     ]);
- }, []);
+ }, [conversationId]);
 
  return (
     <>
