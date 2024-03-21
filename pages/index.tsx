@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Layout/Navbar";
 import { Message } from "@/types";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/supabaseClient";
 
 
 export default function Home() {
@@ -21,6 +22,15 @@ export default function Home() {
 
     setMessages(updatedMessages);
     setLoading(true);
+
+    // Save the message to Supabase
+    const { error: sendError } = await supabase
+        .from('messages')
+        .insert([message]);
+        
+    if (sendError) {
+        console.error('Error saving message to Supabase:', sendError);
+    }    
 
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -73,6 +83,15 @@ export default function Home() {
           };
           return [...messages.slice(0, -1), updatedMessage];
         });
+        // Save the AI's response to Supabase
+    const { error: aiResponseError } = await supabase
+      .from('messages')
+      .insert([updatedMessages]);
+
+    if (aiResponseError) {
+        console.error('Error saving AI response to Supabase:', aiResponseError);
+      }
+
       }
     }
   };
