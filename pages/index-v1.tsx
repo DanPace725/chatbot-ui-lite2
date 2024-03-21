@@ -1,4 +1,3 @@
-// pages/index.tsx
 import { Chat } from "@/components/Chat/Chat";
 import { Footer } from "@/components/Layout/Footer";
 import { Navbar } from "@/components/Layout/Navbar";
@@ -7,43 +6,33 @@ import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/supabaseClient";
 
+
 export default function Home() {
- const [messages, setMessages] = useState<Message[]>([]);
- const [loading, setLoading] = useState<boolean>(false);
- const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
- const scrollToBottom = () => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
- };
+  };
 
- const saveMessageToDatabase = async (message: Message) => {
-    const { data, error } = await supabase.from("messages").insert([
-      {
-        content: message.content,
-        role: message.role,
-        timestamp: new Date().toISOString(),
-      },
-    ]);
-
-    if (error) {
-      console.error("Error saving message to database", error);
-    }
- };
-
- const handleSend = async (message: Message) => {
+  const handleSend = async (message: Message) => {
     const updatedMessages = [...messages, message];
-    setMessages(updatedMessages);
-    await saveMessageToDatabase(message);
 
+    setMessages(updatedMessages);
     setLoading(true);
+
+    
+
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        messages: updatedMessages,
-      }),
+        messages: updatedMessages
+      })
     });
 
     if (!response.ok) {
@@ -52,54 +41,70 @@ export default function Home() {
     }
 
     const data = response.body;
+
     if (!data) {
       return;
     }
 
     setLoading(false);
+
     const reader = data.getReader();
     const decoder = new TextDecoder();
     let done = false;
-    let assistantResponse = "";
+    let isFirst = true;
 
     while (!done) {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
       const chunkValue = decoder.decode(value);
-      assistantResponse += chunkValue;
+
+      if (isFirst) {
+        isFirst = false;
+        setMessages((messages) => [
+          ...messages,
+          {
+            role: "assistant",
+            content: chunkValue
+          }
+        ]);
+      } else {
+        setMessages((messages) => {
+          const lastMessage = messages[messages.length - 1];
+          const updatedMessage = {
+            ...lastMessage,
+            content: lastMessage.content + chunkValue
+          };
+          return [...messages.slice(0, -1), updatedMessage];
+        });
+        
+      }
     }
+  };
 
-    const assistantMessage: Message = {
-      role: "assistant",
-      content: assistantResponse,
-    };
-    setMessages((messages) => [...messages, assistantMessage]);
-    await saveMessageToDatabase(assistantMessage);
- };
-
- const handleReset = () => {
+  const handleReset = () => {
     setMessages([
       {
         role: "assistant",
         content: `Hi there! I'm Chatbot UI, an AI assistant. I can help you with things like answering questions, providing information, and helping with tasks. How can I help you?`
       }
     ]);
- };
+  };
 
- useEffect(() => {
+  useEffect(() => {
     scrollToBottom();
- }, [messages]);
+  }, [messages]);
 
- useEffect(() => {
+  
+  useEffect(() => {
     setMessages([
       {
         role: "assistant",
         content: `Hi there! I'm Chatbot UI, an AI assistant. I can help you with things like answering questions, providing information, and helping with tasks. How can I help you?`
       }
     ]);
- }, []);
+  }, []);
 
- return (
+  return (
     <>
       <Head>
         <title>Chatbot UI</title>
@@ -134,5 +139,5 @@ export default function Home() {
         <Footer />
       </div>
     </>
- );
+  );
 }
