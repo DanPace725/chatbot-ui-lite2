@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from "@/supabaseClient";
 import { Message } from "@/types";
 import { Conversation } from "@/types";
+import "./History.css"; 
 
 export const History = () => {
   return <p>Your chat history:</p>;
