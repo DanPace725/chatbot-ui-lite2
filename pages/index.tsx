@@ -7,15 +7,18 @@ import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { v4 as uuidv4 } from 'uuid';
+import { Editor } from "@/components/Editor/Editor";
 
 export default function Home() {
  const [messages, setMessages] = useState<Message[]>([]);
  const [loading, setLoading] = useState<boolean>(false);
  const [conversationId, setConversationId] = useState<string | null>(null);
  const messagesEndRef = useRef<HTMLDivElement>(null);
- // Add a new state variable for toggling the view
- const [showConversations, setShowConversations] = useState<boolean>(false);
+ const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'editor'
 
+ const toggleView = () => {
+  setCurrentView(currentView === 'chat' ? 'editor' : 'chat');
+};
 
 
  function generateConversationId() {
@@ -200,23 +203,24 @@ const fetchConversations = async () => {
       </Head>
 
       
-        <Navbar />
+        
         <div className="flex flex-col h-screen">
-        {/* Toggle button */}
-        <button onClick={() => setShowConversations(!showConversations)} className="m-4">
-          {showConversations ? "Back to Chat" : "View Saved Conversations"}
-        </button>
-
-        {/* Conditional rendering based on showConversations state */}
-        <div className="flex-1 overflow-auto">
+          <Navbar />
+          <button onClick={toggleView} className="toggle-button">
+            Switch to {currentView === 'chat' ? 'Editor' : 'Chat'}
+          </button>
+          <div className="flex-1 overflow-auto">
           
             <div className="max-w-[800px] mx-auto mt-4 sm:mt-12">
+            {currentView === 'chat' ? (
               <Chat
                 messages={messages}
                 loading={loading}
                 onSend={handleSend}
                 onReset={handleReset}
-              />
+              />) : (
+                <Editor /> 
+              )}
               <div ref={messagesEndRef} />
             </div>
           
