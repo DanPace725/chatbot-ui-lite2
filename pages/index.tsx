@@ -7,7 +7,7 @@ import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { v4 as uuidv4 } from 'uuid';
-import { History } from "@/components/History/History";
+import { ConversationsList } from "@/components/History/History";
 
 export default function Home() {
  const [messages, setMessages] = useState<Message[]>([]);
@@ -225,7 +225,8 @@ const fetchConversations = async () => {
                 onSend={handleSend}
                 onReset={handleReset}
               />) : (
-                <History /> 
+                <ConversationsList
+                /> 
               )}
               <div ref={messagesEndRef} />
           </div>
