@@ -8,3 +8,8 @@ export interface Message {
 }
 
 export type Role = "assistant" | "user";
+
+export interface Conversation {
+  id: string;
+  
+}
