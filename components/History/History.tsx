@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from "@/supabaseClient";
 import { Message } from "@/types";
 import { Conversation } from "@/types";
-import  "@/styles/globals.css";
+
 
 
 export const History = () => {
