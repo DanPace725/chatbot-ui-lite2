@@ -60,7 +60,20 @@ export const ConversationsList = () => {
           </button>
         ))}
       </div>
-      
+      <div>
+        {selectedConversationId && messages.length > 0 ? (
+          <div>
+            <h2>Messages for Conversation {selectedConversationId}</h2>
+            {messages.map((message, index) => (
+              <div key={index}>
+                <p>{message.content}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>Select a conversation to view messages.</p>
+        )}
+      </div>
     </div>
   );
 };
