@@ -52,15 +52,15 @@ export const ConversationsList = () => {
   }, [selectedConversationId]);
 
   return (
-    <div>
-      <div>
+    <div className="chat-container">
+      <div className="sidebar">
         {conversations.map(conversation => (
           <button key={conversation.id} onClick={() => setSelectedConversationId(conversation.id)}>
             Conversation {conversation.id}
           </button>
         ))}
       </div>
-      <div>
+      <div className="main-content">
         {selectedConversationId && messages.length > 0 ? (
           <div>
             <h2>Messages for Conversation {selectedConversationId}</h2>
