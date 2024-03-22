@@ -3,6 +3,7 @@ import { Chat } from "@/components/Chat/Chat";
 import { Footer } from "@/components/Layout/Footer";
 import { Navbar } from "@/components/Layout/Navbar";
 import { Message } from "@/types";
+import { ConversationId } from "@/types";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/supabaseClient";
@@ -12,7 +13,7 @@ import { ConversationsList } from "@/components/History/History";
 export default function Home() {
  const [messages, setMessages] = useState<Message[]>([]);
  const [loading, setLoading] = useState<boolean>(false);
- const [conversationId, setConversationId] = useState<string | null>(null);
+ const [conversationId, setConversationId] = useState<ConversationId>('');
  const messagesEndRef = useRef<HTMLDivElement>(null);
  const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'editor'
 
@@ -24,14 +25,6 @@ export default function Home() {
  function generateConversationId() {
   return uuidv4(); // This function generates a unique UUID
 }
-
-useEffect(() => {
-  const initiateConversation = async () => {
-    await insertConversation();
-  };
-
-  initiateConversation();
-}, []); // The empty array as the second argument ensures this effect runs only once on mount.
 
 
  const scrollToBottom = () => {
@@ -63,7 +56,7 @@ const fetchConversations = async () => {
 };
 
  // New function to insert a conversation into the database
- const insertConversation = async () => {
+ const insertConversation = async (): Promise<string> => {
   // Check if the conversation already exists in the state
   if (!conversationId) {
     // Generate a new conversation ID
@@ -74,7 +67,7 @@ const fetchConversations = async () => {
     // If there's an error, log it and stop the process
     if (error) {
       console.error("Error inserting new conversation: ", error);
-      return null;
+      return "-";
     }
 
     // If successful, update the state with the new conversation ID
@@ -87,29 +80,36 @@ const fetchConversations = async () => {
 };
 
 
- const handleSend = async (message: Message) => {
+const handleSend = async (message: Message) => {
+  let convoId = conversationId;
   
-  const convoId = await insertConversation(); // Ensure conversation is created/exists before sending messages
-
-  // If there's no conversation ID, don't proceed
+  // If there's no conversation ID, create a new one
   if (!convoId) {
+    convoId = await insertConversation();
+  }
+  
+  // Insert the new conversation record into the 'conversations' table
+  const { error } = await supabase.from('conversations').insert([{ id: convoId }]);
+
+  // If there's an error, log it and stop the process
+  if (error) {
+    console.error("Error inserting new conversation: ", error);
     setLoading(false);
-    console.error("No conversation ID available.");
     return;
   }
 
-    const updatedMessages = [...messages, message];
-    setMessages(updatedMessages);
-    
-    // Check if conversationId is not null before calling saveMessageToDatabase
-   if (conversationId) {
-    await saveMessageToDatabase(message, convoId);
-  } else {
-    // Handle the case where conversationId is null
-    console.error("ConversationId is null");
-  }
+  // If successful, update the state with the new conversation ID
+  setConversationId(convoId);
+  
 
-    setLoading(true);
+const updatedMessages = [...messages, message];
+setMessages(updatedMessages);
+    
+await saveMessageToDatabase(message, convoId);
+
+
+setLoading(true);
+
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: {

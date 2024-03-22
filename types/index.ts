@@ -13,3 +13,4 @@ export interface Conversation {
   id: string;
   
 }
+export type ConversationId = string;

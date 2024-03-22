@@ -4,13 +4,6 @@ import { Message } from "@/types";
 import { Conversation } from "@/types";
 
 
-
-export const History = () => {
-  return <p>Your chat history:</p>;
-};
-
-
-
 export const ConversationsList = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState('');
@@ -64,13 +57,19 @@ export const ConversationsList = () => {
       </div>
       <div className="main-content">
         {selectedConversationId && messages.length > 0 ? (
-          <div>
+          <div className="messages-container">
             <h2>Messages for Conversation {selectedConversationId}</h2>
-            {messages.map((message, index) => (
-              <div key={index}>
-                <p>{message.content}</p>
-              </div>
-            ))}
+            <div className="messages-list">
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`message-bubble ${message.role === 'user' ? 'user-message' : 'assistant-message'}`}
+                >
+                  <p className="message-content">{message.content}</p>
+                  
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <p>Select a conversation to view messages.</p>
@@ -79,5 +78,6 @@ export const ConversationsList = () => {
     </div>
   );
 };
+
 
 export default ConversationsList;
