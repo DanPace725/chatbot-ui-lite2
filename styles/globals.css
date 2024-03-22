@@ -15,15 +15,45 @@
   height: 100vh; /* Adjust the height as needed */
 }
 
+/* Sidebar Styles */
 .sidebar {
-  flex: 0 0 250px; /* Adjust the width as needed */
-  background-color: #f0f0f0; /* Light grey background */
+  width: 250px; /* Adjust the width as needed */
+  background-color: #ffffff; /* Use a white or neutral background for a clean look */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
   overflow-y: auto; /* Enable scrolling if many conversations */
-  padding: 20px;
+  padding: 1rem; /* Use rem for scalable padding */
+  position: fixed; /* Ensure the sidebar is fixed to the edge of the screen */
+  top: 0; /* Align to the top */
+  left: 0; /* Align to the left edge */
+  height: 100vh; /* Full height of the viewport */
+  z-index: 1000; /* Ensure it's above other content */
+  transition: all 0.3s ease; /* Smooth transition for any changes */
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
 }
 
+/* Add spacing and modern styling to buttons */
+.sidebar button {
+  padding: 0.5rem 1rem; /* Uniform padding */
+  margin-bottom: 0.5rem; /* Spacing between buttons */
+  border: none; /* Remove default border */
+  background-color: #f3f3f3; /* Slightly off-white for the button backgrounds */
+  color: #333; /* Darker text for contrast */
+  text-align: left; /* Align text to the left */
+  border-radius: 4px; /* Slightly rounded corners for a modern feel */
+  cursor: pointer; /* Change cursor to pointer */
+  transition: background-color 0.2s ease; /* Transition for hover effect */
+}
+
+/* Hover effect for buttons */
+.sidebar button:hover {
+  background-color: #e2e2e2; /* Lighter background on hover */
+}
+
+/* Main content should start next to the sidebar */
 .main-content {
+  margin-left: 250px; /* Equal to the width of the sidebar */
   flex: 1;
-  padding: 20px;
+  padding: 1rem; /* Use rem for scalable padding */
   overflow-y: auto; /* Enable scrolling for messages */
 }
