@@ -202,16 +202,22 @@ const fetchConversations = async () => {
         />
       </Head>
 
-      
-        
-        <div className="flex flex-col h-screen">
-          <Navbar />
-          <button onClick={toggleView} className="toggle-button">
-            Switch to {currentView === 'chat' ? 'Editor' : 'Chat'}
-          </button>
-          <div className="flex-1 overflow-auto">
-          
-            <div className="max-w-[800px] mx-auto mt-4 sm:mt-12">
+      <div className="flex flex-col h-screen">
+        <Navbar />
+        <div className="flex justify-center items-center my-4">
+          <label htmlFor="toggle" className="flex items-center cursor-pointer">
+            <div className="relative">
+              <input id="toggle" type="checkbox" className="sr-only" checked={currentView === 'editor'} onChange={toggleView} />
+              <div className="block bg-neutral-200 w-14 h-8 rounded-full"></div>
+              <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform" style={{ transform: currentView === 'editor' ? 'translateX(100%)' : '' }}></div>
+            </div>
+            <div className="ml-3 text-neutral-900 font-semibold">
+              Switch to {currentView === 'chat' ? 'Editor' : 'Chat'}
+            </div>
+          </label>
+        </div>
+        <div className="flex-1 overflow-auto">
+          <div className="max-w-[800px] mx-auto mt-4 sm:mt-12">
             {currentView === 'chat' ? (
               <Chat
                 messages={messages}
@@ -222,8 +228,7 @@ const fetchConversations = async () => {
                 <Editor /> 
               )}
               <div ref={messagesEndRef} />
-            </div>
-          
+          </div>
         </div>
         <Footer />
       </div>
