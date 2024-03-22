@@ -1,3 +1,101 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Toggle switch styles */
+.toggle-switch .dot {
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  /* When the checkbox is checked, move the dot to the right */
+  .toggle-switch input:checked ~ .dot {
+    transform: translateX(100%);
+  }
+.chat-container {
+  display: flex;
+  height: 100vh; /* Adjust the height as needed */
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: 250px; /* Adjust the width as needed */
+  background-color: #ffffff; /* Use a white or neutral background for a clean look */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  overflow-y: auto; /* Enable scrolling if many conversations */
+  padding: 1rem; /* Use rem for scalable padding */
+  position: fixed; /* Ensure the sidebar is fixed to the edge of the screen */
+  top: 60px; /* Start under the navbar */
+  left: 0; /* Align to the left edge */
+  height: calc(100vh - 60px); /* Adjust height to account for navbar */
+  z-index: 1000; /* Ensure it's above other content */
+  transition: all 0.3s ease; /* Smooth transition for any changes */
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
+}
+
+/* Add spacing and modern styling to buttons */
+.sidebar button {
+  padding: 0.5rem 1rem; /* Uniform padding */
+  margin-bottom: 0.5rem; /* Spacing between buttons */
+  border: none; /* Remove default border */
+  background-color: #f3f3f3; /* Slightly off-white for the button backgrounds */
+  color: #333; /* Darker text for contrast */
+  text-align: left; /* Align text to the left */
+  border-radius: 4px; /* Slightly rounded corners for a modern feel */
+  cursor: pointer; /* Change cursor to pointer */
+  transition: background-color 0.2s ease; /* Transition for hover effect */
+}
+
+/* Hover effect for buttons */
+.sidebar button:hover {
+  background-color: #e2e2e2; /* Lighter background on hover */
+}
+
+/* Main content should start next to the sidebar */
+.main-content {
+  margin-left: 150px; /* Equal to the width of the sidebar */
+  flex: 1;
+  padding: 1rem; /* Use rem for scalable padding */
+  overflow-y: auto; /* Enable scrolling for messages */
+}
+/* New styles for the chat history */
+/* Messages list container */
+.messages-container {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+/* Container for individual messages */
+.messages-list {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Style for each message bubble */
+.message-bubble {
+  max-width: 80%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Styles for user messages */
+.user-message {
+  background-color: #ADD8E6; 
+  text-align: right;
+}
+
+/* Styles for assistant messages */
+.assistant-message {
+  background-color: #E5E5EA; /* A light grey color, common for assistant messages */
+  align-self: flex-start;
+  text-align: left;
+}
+
+/* Message text content */
+.message-content {
+  margin: 0;
+}

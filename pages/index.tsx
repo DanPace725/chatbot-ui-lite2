@@ -3,29 +3,28 @@ import { Chat } from "@/components/Chat/Chat";
 import { Footer } from "@/components/Layout/Footer";
 import { Navbar } from "@/components/Layout/Navbar";
 import { Message } from "@/types";
+import { ConversationId } from "@/types";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { v4 as uuidv4 } from 'uuid';
+import { ConversationsList } from "@/components/History/History";
 
 export default function Home() {
  const [messages, setMessages] = useState<Message[]>([]);
  const [loading, setLoading] = useState<boolean>(false);
- const [conversationId, setConversationId] = useState<string | null>(null);
+ const [conversationId, setConversationId] = useState<ConversationId>('');
  const messagesEndRef = useRef<HTMLDivElement>(null);
+ const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'editor'
+
+ const toggleView = () => {
+  setCurrentView(currentView === 'chat' ? 'History' : 'chat');
+};
 
 
  function generateConversationId() {
   return uuidv4(); // This function generates a unique UUID
 }
-
-useEffect(() => {
-  const initiateConversation = async () => {
-    await insertConversation();
-  };
-
-  initiateConversation();
-}, []); // The empty array as the second argument ensures this effect runs only once on mount.
 
 
  const scrollToBottom = () => {
@@ -47,8 +46,17 @@ useEffect(() => {
     }
  };
 
+ // Function to fetch conversations from the database
+const fetchConversations = async () => {
+  const { data, error } = await supabase.from('messages').select('*');
+  if (error) {
+    console.error("Error fetching conversations: ", error);
+  }
+  return data;
+};
+
  // New function to insert a conversation into the database
- const insertConversation = async () => {
+ const insertConversation = async (): Promise<string> => {
   // Check if the conversation already exists in the state
   if (!conversationId) {
     // Generate a new conversation ID
@@ -59,7 +67,7 @@ useEffect(() => {
     // If there's an error, log it and stop the process
     if (error) {
       console.error("Error inserting new conversation: ", error);
-      return null;
+      return "-";
     }
 
     // If successful, update the state with the new conversation ID
@@ -72,29 +80,36 @@ useEffect(() => {
 };
 
 
- const handleSend = async (message: Message) => {
+const handleSend = async (message: Message) => {
+  let convoId = conversationId;
   
-  const convoId = await insertConversation(); // Ensure conversation is created/exists before sending messages
-
-  // If there's no conversation ID, don't proceed
+  // If there's no conversation ID, create a new one
   if (!convoId) {
+    convoId = await insertConversation();
+  }
+  
+  // Insert the new conversation record into the 'conversations' table
+  const { error } = await supabase.from('conversations').insert([{ id: convoId }]);
+
+  // If there's an error, log it and stop the process
+  if (error) {
+    console.error("Error inserting new conversation: ", error);
     setLoading(false);
-    console.error("No conversation ID available.");
     return;
   }
 
-    const updatedMessages = [...messages, message];
-    setMessages(updatedMessages);
-    
-    // Check if conversationId is not null before calling saveMessageToDatabase
-   if (conversationId) {
-    await saveMessageToDatabase(message, convoId);
-  } else {
-    // Handle the case where conversationId is null
-    console.error("ConversationId is null");
-  }
+  // If successful, update the state with the new conversation ID
+  setConversationId(convoId);
+  
 
-    setLoading(true);
+const updatedMessages = [...messages, message];
+setMessages(updatedMessages);
+    
+await saveMessageToDatabase(message, convoId);
+
+
+setLoading(true);
+
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
@@ -166,11 +181,13 @@ useEffect(() => {
       }
     ]);
  }, [conversationId]);
+ // Component to display saved conversations
+
 
  return (
     <>
       <Head>
-        <title>Chatbot UI</title>
+        <title>Mindi</title>
         <meta
           name="description"
           content="A simple chatbot starter kit for OpenAI's chat model using Next.js, TypeScript, and Tailwind CSS."
@@ -187,20 +204,37 @@ useEffect(() => {
 
       <div className="flex flex-col h-screen">
         <Navbar />
-
-        <div className="flex-1 overflow-auto sm:px-10 pb-4 sm:pb-10">
+        <div className="flex justify-center items-center my-4">
+          <label htmlFor="toggle" className="flex items-center cursor-pointer">
+            <div className="relative">
+              <input id="toggle" type="checkbox" className="sr-only" checked={currentView === 'History'} onChange={toggleView} />
+              <div className="block bg-neutral-200 w-14 h-8 rounded-full"></div>
+              <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform" style={{ transform: currentView === 'editor' ? 'translateX(100%)' : '' }}></div>
+            </div>
+            <div className="ml-3 text-neutral-900 font-semibold">
+              Switch to {currentView === 'chat' ? 'History' : 'Chat'}
+            </div>
+          </label>
+        </div>
+        <div className="flex-1 overflow-auto">
           <div className="max-w-[800px] mx-auto mt-4 sm:mt-12">
-            <Chat
-              messages={messages}
-              loading={loading}
-              onSend={handleSend}
-              onReset={handleReset}
-            />
-            <div ref={messagesEndRef} />
+            {currentView === 'chat' ? (
+              <Chat
+                messages={messages}
+                loading={loading}
+                onSend={handleSend}
+                onReset={handleReset}
+              />) : (
+                <ConversationsList
+                /> 
+              )}
+              <div ref={messagesEndRef} />
           </div>
         </div>
         <Footer />
       </div>
     </>
- );
+  );
 }
+
+      
