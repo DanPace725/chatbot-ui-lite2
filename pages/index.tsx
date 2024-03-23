@@ -22,6 +22,7 @@ export default function Home() {
 };
 
 
+
  function generateConversationId() {
   return uuidv4(); // This function generates a unique UUID
 }
@@ -187,7 +188,7 @@ setLoading(true);
  return (
     <>
       <Head>
-        <title>Mindi</title>
+        <title>Mindi AI</title>
         <meta
           name="description"
           content="A simple chatbot starter kit for OpenAI's chat model using Next.js, TypeScript, and Tailwind CSS."
@@ -204,6 +205,8 @@ setLoading(true);
 
       <div className="flex flex-col h-screen">
         <Navbar />
+        
+        
         <div className="flex justify-center items-center my-4">
           <label htmlFor="toggle" className="flex items-center cursor-pointer">
             <div className="relative">

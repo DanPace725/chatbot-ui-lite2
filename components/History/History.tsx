@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from "@/supabaseClient";
 import { Message } from "@/types";
 import { Conversation } from "@/types";
-
+import { ConversationTitle } from '@/types';
 
 export const ConversationsList = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationTitles, setConversationTitles] = useState<ConversationTitle[]>([]);
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -46,12 +47,32 @@ export const ConversationsList = () => {
     fetchMessages();
   }, [selectedConversationId]);
 
+  useEffect(() => {
+    const fetchConversationTitles = async () => {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('id, title');
+
+      if (error) {
+        console.error('Error fetching conversation titles:', error);
+        return;
+      }
+
+      setConversationTitles(data);
+    };
+
+    fetchConversationTitles();
+  }, []);
+
   return (
     <div className="chat-container">
       <div className="sidebar">
-        {conversations.map(conversation => (
-          <button key={conversation.id} onClick={() => setSelectedConversationId(conversation.id)}>
-            Conversation {conversation.id}
+        {conversationTitles.map((conversation) => (
+          <button
+            key={conversation.id}
+            onClick={() => setSelectedConversationId(conversation.id)}
+          >
+            {conversation.title}
           </button>
         ))}
       </div>

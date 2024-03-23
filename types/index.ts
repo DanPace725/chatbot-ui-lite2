@@ -12,5 +12,14 @@ export type Role = "assistant" | "user";
 export interface Conversation {
   id: string;
   
+  
 }
 export type ConversationId = string;
+
+
+export interface ConversationTitle {
+  id: string;
+  title: string;
+
+}
+export type ConversationTitleId = string
